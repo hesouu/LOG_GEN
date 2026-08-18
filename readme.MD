@@ -18,6 +18,7 @@
 - provider.tf   : 
 - locals.tf     : 공통값 가공, 태그, 전페 프로젝트 프리픽스
 - vpc.tf        : 전용 네트워크, VPC, subnet, IGW, Route table, SG, AZ 가능
+- sg.tf         : 보안그룹 (외부 연결 x) -> ingress 미지정
 - iam.tf        : Fargate가 ECR 이미지 획득, CloudWatch에 로그기록 -> 권한부여
 - logs.tf       : ECS 컨테이너내에 (로그 생성기 존재) 발생되는 로그 -> 로그 그룹 지정
 - ecr.tf        : 로그 생성기 (파이썬 코드) -> Docker 이미지로 생성하여 저장할 저장소
