@@ -1,0 +1,1 @@
+{'event_type': 'checkout', 'data': {'user_id': 'usr_372292', 'session_id': '68b64f55d32948c084eb', 'product_id': 'prd_736802', 'category': ['sports'], 'quantity': 1, 'unit_price': 170900, 'currency': 'KRW', 'campaign': ['coupon']}}
