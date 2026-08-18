@@ -67,6 +67,8 @@
 
 ## 지원 도메인 및 이벤트 정의
 - domain으로 카테고리 설정
+- 각 도메인들을 이벤트 비율 조정, 시간대별 발생량 조절, 주요 필드 설정, 각각에 대한 지연시간 설정
+  - 실제 도메인의 인사이트를 반영하여 설계
 
 | DOMAIN | 주요 이벤트 예시 |
 |---|---|
@@ -74,3 +76,32 @@
 | `finance` | account_login, balance_inquiry, card_payment, transfer, deposit, withdrawal |
 | `smartfactory` | sensor_reading, equipment_state, quality_inspection, alarm, maintenance_event |
 | `game` | login, session_heartbeat, match_started, match_finished, item_purchase, quest_completed |
+
+# 실제와 유사한 발생 간격
+- 고려 조건
+  - 시간대별 가중치
+  - 평일/주말 가중치
+  - 간혈적 등장 부스터(트레픽 상승)
+  - ...
+
+- 예
+  - 이커머스 : 점심/저녁 시간대 증가, 주말 감소
+  - 금융 : 평인 주간 시간 증가, 주말 감소
+  - 스마트팩토리 : 24시간 비교적 일정, 교대/주말 변화 
+  - 게임 : 저녁/야간 피크, 주말 증가세
+  - 증가세를 적용하여 피크시 트레피을 10배, 5배 이렇게 가중 할수 있음
+
+# 오염 데이터
+- 비율 지정 => 0.03 => 각 이벤트에서 3% 비율로 오염 데이터 생산 => ETL에서 clean 작업 처리
+- 오염 유형
+```
+missing_field
+null_required
+wrong_type
+invalid_timestamp
+numeric_outlier
+invalid_enum
+negative_latency
+duplicate
+malformed_json
+```

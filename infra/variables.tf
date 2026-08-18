@@ -14,7 +14,7 @@ variable "vpc_cidr" {
   description = "VPC CIDR, fargate 전용"
   type        = string
   # 대역 수정 => 0 => 20
-  default     = "10.20.0.0/16"
+  default = "10.20.0.0/16"
 }
 
 variable "public_subnet_cidrs" {
