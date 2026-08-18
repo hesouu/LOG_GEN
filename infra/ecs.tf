@@ -6,7 +6,7 @@ resource "aws_ecs_cluster" "this" {
 # 2. Fargate에서 실행할 로그 생성기 컨테이너에 대한 실행시 명세서(률, 설정, ....)
 resource "aws_ecs_task_definition" "generator" {
   # 관리단 => family, 소속그룹
-  # de-ai-25-loggen-task:1 => de-ai-25-loggen-task:2 => ... 수정발생 => 넘버를 부여하여 새로 생성
+  # de-ai-09-loggen-task:1 => de-ai-09-loggen-task:2 => ... 수정발생 => 넘버를 부여하여 새로 생성
   family = local.task_family
 
   # FARGATE 사용 : task가 어떻게 정의된 실행환경에서 사용한 것인지 지정 -> ec2 x, 

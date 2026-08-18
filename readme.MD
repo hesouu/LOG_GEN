@@ -148,4 +148,99 @@ File/Batch         AWS Stream       Event Stream
 ```
 
 - 설치
-pip install -r requirements.txt
+```
+# 루트 위치에서
+pip install -r generator/requirements.txt
+```
+
+# 스크립트 
+- setup.bat
+```
+  Terraform init
+      ↓
+  Terraform apply
+      ↓
+  ECR Repository 생성
+  ECS/Fargate 관련 인프라 생성
+      ↓
+  AWS ECR 로그인
+      ↓
+  Docker 이미지 Build
+      ↓
+  ECR에 latest 이미지 Push
+```
+
+- run-local.bat(sh)
+- 로컬 PC에서 로그 생성 (로컬 테스트)
+```
+  # 문법
+  scripts/run-local.sh [DOMAIN] [DURATION] [RPS] [CORRUPTION] [OUTPUT] [TIME_SCALE]
+
+  # 샘플 
+  scripts/run-local.sh finance 5 5 0.05 both 1
+
+  # 해석
+  finance 도메인 로그 생성
+  ↓
+  60초 동안 실행
+  ↓
+  평균 5 RPS 속도로 생성된다
+  ↓
+  5% 오엽 데이터를 구성
+  ↓
+  출력은 stdout, file, both(둘다)
+  file은 output 폴더 내부에 기록
+  ↓
+  시간 배율 조절은 1
+
+```
+
+- run-generator.sh
+  - AWS fargate에서 진행
+```
+  # 전체 옵션
+  scripts/run-generator.sh [DOMAIN] [DURATION] [BASE_RPS] [CORRUPTION_RATE] [TASK_COUNT] [REGION] [TIME_SCALE]
+
+  # 흐름
+  로컬 PC 명령 수행
+  ↓
+  AWS ecs run-task 가동
+  ↓
+  ECS Cluster 
+  ↓
+  Fargate task 작동
+  ↓
+  Docker Container
+  ↓
+  Python 로그 생성기 작동
+  ↓
+  CloudWatch에 로그 저장
+```
+
+  # 명령어 샘플
+  scripts\run-generator.sh ecommerce 2 5 0.05 1 ap-northeast-2 1    
+  ---
+  ============================================================
+  Fargate synthetic log generator
+  ============================================================
+  Run ID          : loggen-2251219129-932
+  Domain          : ecommerce
+  Duration        : 2s
+  Base RPS        : 5
+  Time scale      : 1
+  Corruption rate : 0.05
+  Tasks           : 1
+  Region          : ap-northeast-2
+  Cluster         : de-ai-09-loggen-cluster
+
+  -----------------------------------------------------------------------------------------------------------       
+  |                                                 RunTask                                                 |
+  +---------------------------------------------------------------------------------------------------------+
+  |  arn:aws:ecs:ap-northeast-2:827913617635:task/de-ai-25-loggen-cluster/c79e8eb92b65483cb216e63afcee22d8  |
+  +---------------------------------------------------------------------------------------------------------+
+
+
+  Task started.
+  Follow generated logs:
+    aws logs tail "/ecs/de-ai-25-loggen" --follow --region "ap-northeast-2"
+```
