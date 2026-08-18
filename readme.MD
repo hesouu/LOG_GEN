@@ -22,5 +22,55 @@
 - iam.tf        : Fargate가 ECR 이미지 획득, CloudWatch에 로그기록 -> 권한부여
 - logs.tf       : ECS 컨테이너내에 (로그 생성기 존재) 발생되는 로그 -> 로그 그룹 지정
 - ecr.tf        : 로그 생성기 (파이썬 코드) -> Docker 이미지로 생성하여 저장할 저장소
-- esc.tf        : ECS 클러스터와 Fargate Task Definition등이 구동되는 실행 환경 제공 -> 1회성 (상시 운영 x)
+- ecs.tf        : ECS 클러스터와 Fargate Task Definition등이 구동되는 실행 환경 제공 -> 1회성 (상시 운영 x)
 - outputs.tf    : 생성후 각종 정보 출력
+
+# 인프라 구성
+```
+> ~/infra
+> terraform init
+> terraform fmt
+> terraform vaildate
+> terraform plan
+> terraform apply
+```
+
+# 로그 생성기 (~/generator)
+## 로그 포멧 (공통)
+- 서비스 요청에 따른 처리가 완료된후 로그로 기록하는 최종 필드를 포함한 데이터 샘플
+```json
+{
+  "schema_version": "1.0",
+  "record_type": "application_log",
+  "event_id": "...",
+  "trace_id": "...",
+  "run_id": "...",
+  "occurred_at": "2026-08-12T16:30:11.123+09:00",
+  "generated_at_utc": "2026-08-12T07:30:11.123+00:00",
+  "domain": "ecommerce",
+  "event_type": "order_created",
+  "service": {...},
+  "client": {...},
+  "request": {
+    "method": "POST",
+    "path": "/api/orders",
+    "request_bytes": 1234
+  },
+  "response": {
+    "status_code": 201,
+    "latency_ms": 287,
+    "response_bytes": 3590
+  },
+  "data": {... domain specific ...}  <- 도메인별로 커스텀 구성
+}
+```
+
+## 지원 도메인 및 이벤트 정의
+- domain으로 카테고리 설정
+
+| DOMAIN | 주요 이벤트 예시 |
+|---|---|
+| `ecommerce` | product_view, search, add_to_cart, checkout, order_created, payment_completed |
+| `finance` | account_login, balance_inquiry, card_payment, transfer, deposit, withdrawal |
+| `smartfactory` | sensor_reading, equipment_state, quality_inspection, alarm, maintenance_event |
+| `game` | login, session_heartbeat, match_started, match_finished, item_purchase, quest_completed |
