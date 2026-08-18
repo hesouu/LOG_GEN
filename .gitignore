@@ -18,3 +18,5 @@ output/*.log
 .DS_Store
 .vscode/
 .idea/
+
+.envrc
