@@ -95,6 +95,13 @@ Fargate → Kinesis → Firehose → S3 확인 (jsonl, gzip)
 │  ├─ s3.tf              # 5. 신규
 ```
 
-# 파이썬 검토
+# 파이썬 검토 (kinesis로 전송 조정)
+- 패키지
+       ```
+       Faker
+       boto3  # AWS SDK 패키지
+       ```
+- 
+
 
 # bat/shell 검토

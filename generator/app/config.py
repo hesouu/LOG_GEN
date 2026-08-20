@@ -54,6 +54,11 @@ class Settings:
     include_corruption_label: bool
     output_mode: str
     log_file: str
+
+    # [브론즈 추가]
+    kinesis_enabled: bool
+    kinesis_stream_name: str
+
     timezone: str
     faker_locale: str
     environment: str
@@ -73,6 +78,9 @@ class Settings:
 
         # 2. 실행 지속시간을 초 단위로 읽음
         duration_seconds = _env_int("DURATION_SECONDS", 300)
+        # 3. 최대 이벤트 수를 읽으며 0은 개수 제한을 사용하지 않음 <- 위치조정
+        max_events = _env_int("MAX_EVENTS", 0)
+
         # 실행 시간이 음수인지 검증
         if duration_seconds < 0:
             raise ValueError("DURATION_SECONDS must be >= 0")
@@ -80,8 +88,7 @@ class Settings:
         if duration_seconds == 0 and max_events == 0:
             raise ValueError("Set DURATION_SECONDS > 0 or MAX_EVENTS > 0 to bound the run")
 
-        # 3. 최대 이벤트 수를 읽으며 0은 개수 제한을 사용하지 않음
-        max_events = _env_int("MAX_EVENTS", 0)
+        
         # 최대 이벤트 수가 음수인지 검증
         if max_events < 0:
             raise ValueError("MAX_EVENTS must be >= 0")
@@ -114,6 +121,10 @@ class Settings:
         seed_raw = _env("SEED", "")
         # seed가 있으면 정수로 변환하고 없으면 None 사용
         seed = int(seed_raw) if seed_raw else None
+
+        # [브론즈 추가]
+        # KINESIS 사용여부
+        kinesis_enabled = _env_bool("KINESIS_ENABLED", False)
 
         # 검증이 끝난 환경변수 값으로 Settings 객체 생성 -> 클레스에 인자 넣어서 객체 생성
         return cls(
