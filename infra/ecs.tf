@@ -48,7 +48,7 @@ resource "aws_ecs_task_definition" "generator" {
         # KINESIS 기능 활성화
         { name = "KINESIS_ENABLED", value = "true" },
         # KINESIS 스트림 (KDS) 이름
-        { name = "KINESIS_STREAM_NAME", value = aws_kinaesis_stream.logs.name },
+        { name = "KINESIS_STREAM_NAME", value = aws_kinesis_stream.logs.name },
 
         # 로그의 도메인 : 이커머스, 파이낸스, 스마트팩토리, 게임
         { name = "DOMAIN", value = "ecommerce" },

@@ -1,6 +1,6 @@
 resource "aws_kinesis_stream" "logs" {
-  name = local.kinesis_stream_name
-  shard_count = var.kinesis_shard_count
+  name             = local.kinesis_stream_name
+  shard_count      = var.kinesis_shard_count
   retention_period = var.kinesis_retention_hour
 
   # 구성 방식
