@@ -125,6 +125,10 @@ class Settings:
         # [브론즈 추가]
         # KINESIS 사용여부
         kinesis_enabled = _env_bool("KINESIS_ENABLED", False)
+        kinesis_stream_name = _env("KINESIS_STREAM_NAME", "")
+        if kinesis_enabled and not kinesis_stream_name:
+            raise ValueError("KINESIS_STREAM_NAME값은 KINESIS_ENABLED=true일때 필수 옵션입니다.")
+        
 
         # 검증이 끝난 환경변수 값으로 Settings 객체 생성 -> 클레스에 인자 넣어서 객체 생성
         return cls(
@@ -138,6 +142,11 @@ class Settings:
             output_mode                     =output_mode,
             # 선택 여지 없이 기본값
             log_file                        =_env("LOG_FILE", "/tmp/generated-logs.jsonl"),
+            
+            # [브론즈 추가]
+            kinesis_enabled                 =kinesis_enabled,
+            kinesis_stream_name             =kinesis_stream_name,
+
             timezone                        =_env("TIMEZONE", "Asia/Seoul"),
             faker_locale                    =_env("FAKER_LOCALE", "ko_KR"),
             environment                     =_env("ENVIRONMENT", "simulation"),

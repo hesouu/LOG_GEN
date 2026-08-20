@@ -12,15 +12,27 @@ from pathlib import Path
 # 파일 핸들의 타입을 명확하게 지정
 from typing import TextIO
 
+# [ 브론즈 추가]
+# aws sdk 패키지
+import boto3
+
+
 
 # JSONL 형식의 stdout/파일 출력을 담당하는 클래스
 class JsonlOutput:
     # 출력 방식과 로그 파일 경로를 초기화
-    def __init__(self, mode: str, log_file: str):
+    # [브론즈 추가] 클래스 생성자 => 객체 생성, 인스턴스 변수 초기화
+    def __init__(self, mode: str, log_file: str,  kinesis_enabled:bool = False, kinesis_stream_name:str = ""):
         # stdout/file/both 중 선택한 출력 모드 저장
         self.mode = mode
         # 파일 출력 시 사용할 경로 저장
         self.log_file = log_file
+        # [브론즈 추가]
+        self.kinesis_enabled = kinesis_enabled
+        self.kinesis_stream_name = self.kinesis_stream_name
+        # kinesis 서비스 객체
+        self._kinesis = None
+
         # 아직 열리지 않은 파일 핸들을 None으로 초기화
         self._handle: TextIO | None = None
 
@@ -32,6 +44,10 @@ class JsonlOutput:
             path.parent.mkdir(parents=True, exist_ok=True)
             # 기존 파일 뒤에 UTF-8 라인 버퍼링 방식으로 이어쓰기
             self._handle = path.open("a", encoding="utf-8", buffering=1)
+
+        # [브론즈 추가], kinesis 객체 생성 -> kinesis 접근 가능함
+        if self.kinesis_enabled:
+            self._kinesis = boto3.client("kinesis")
 
     # 이벤트 한 건을 JSON 문자열로 변환해 지정된 출력 대상으로 전송
     def emit(self, event: dict, malformed_json: bool = False) -> None:
@@ -47,13 +63,25 @@ class JsonlOutput:
             line = line[:cut]
 
         # stdout 출력 모드가 포함되면 콘솔로 로그 출력
+        # 터미널 출력 OR cloudwatch 전송 => 개발자 디버깅, 관리, 운용 용도
         if self.mode in {"stdout", "both"}:
             # stdout에 즉시 출력해 컨테이너 로그로 전달
             print(line, flush=True)
+
         # 파일이 실제로 열려 있을 때만 파일 작업 수행
+        # 파일 출력 => 개발시 디버깅, 관리, 운용 용도, 데이터 확인용
         if self._handle is not None:
             # 파일 출력 모드에서는 이벤트 한 건을 한 줄로 기록
             self._handle.write(line + os.linesep)
+
+        # [브론즈 추가] kinesis 전송
+        if self._kinesis:
+            self._kinesis.put_record(
+                StreamName      = self.kinesis_stream_name,
+                Data            = (line + "\n").encode('utf-8'),
+                # 같은 도메인으로 파티션키 활용
+                PartitionKey    = str(event.get("domain","default"))
+            )
 
     # 열려 있는 로그 파일 핸들을 안전하게 닫음
     def close(self) -> None:
