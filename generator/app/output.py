@@ -29,7 +29,7 @@ class JsonlOutput:
         self.log_file = log_file
         # [브론즈 추가]
         self.kinesis_enabled = kinesis_enabled
-        self.kinesis_stream_name = self.kinesis_stream_name
+        self.kinesis_stream_name = kinesis_stream_name
         # kinesis 서비스 객체
         self._kinesis = None
 

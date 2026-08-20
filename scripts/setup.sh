@@ -23,7 +23,7 @@ echo "[3/4] ECR login"
 aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "$REGISTRY"
 
 echo "[4/4] Build and push Python/Faker generator image"
-docker build -t "$REPO:latest" "$GENERATOR"
+docker build --no-cache --platform linux/amd64 -t "$REPO:latest" "$GENERATOR"
 docker push "$REPO:latest"
 
 echo "Setup complete"

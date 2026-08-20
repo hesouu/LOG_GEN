@@ -1,15 +1,17 @@
-#  개요
+# 개요
 - main 브런치는 로그를 CloudWatch에 저장하고 있음
-    - 애플리케이션 상태/오류/디버깅 용도 => 개발, 유지보수에 연관 => 앱/웹 개발자 관여
+  - 애플리케이션 상태/오류/디버깅 용도 => 개발, 유지보수에 연관 => 앱/웹 개발자 관여
 - 데이터 엔지니어 관점 새로운 흐름(파이프라인 구성) 필요
-    - s3에 바로 저장 (다이렉트 저장)
-        - 불필요한 I/O 아주 많이 발생 (빈번한 putObject 행위 발생)
-        - 작은 파일이 많이 발생함
-    - 방식
-        - 해당 데이터는 실시간 스트리밍 수집 -> kinesis 활용
-        - 데이터를 모아서 (시간단위, 용랑단위) 한번에 s3에 저장 -> firehose 활용
-        - Streaming Ingestion
-        - 향후 kinesis -> flink (대용량, 실시간 전처리) / lambda  -> kinesis -> firehose 로 구성하여 silver 단계 구성 가능 
+  - s3에 바로 저장 (다이렉트 저장)
+    - 불필요한 I/O 아주 많이 발생 (빈번한 putObject 행위 발생)
+    - 작은 파일이 많이 발생함
+  - 방식
+    - 해당 데이터는 실시간 스트리밍 수집 -> kinesis 활용
+    - 데이터를 모아서(시간단위, 용량단위) 한번에 s3에 저장 -> firehose 활용
+    - Streaming Ingestion
+
+  - 향후 
+    - kinesis -> flink(대용량,실시간 전처리) / lambda   -> kinesis -> firehose 로 구성하여 sliver 단계 구성 가능
 
 # 구성도
 - 기본적 스트리밍 수집
@@ -80,19 +82,19 @@ Fargate → Kinesis → Firehose → S3 확인 (jsonl, gzip)
 ├─infra
 │  │  ecr.tf            # 유지
 │  │  ecs.tf            # 9. 수정
-│  │  iam.tf             # 6/8. 수정 (6.firehose관련, 8. ecs-task에서 kinesis put 처리)
-│  │  locals.tf          # 3. 수정
-│  │  logs.tf            # 유지
-│  │  outputs.tf         # 10. 수정
-│  │  provider.tf        # 1. 수정
-│  │  sg.tf
-│  │  variables.tf       # 2. 수정
-│  │  version.tf         # 유지
-│  │  vpc.tf             # 유지
+│  │  iam.tf            # 6/8. 수정 (6.firehose 관련, 8.ecs-task에서 kinesis put 처리) 
+│  │  locals.tf         # 3. 수정
+│  │  logs.tf           # 유지
+│  │  outputs.tf        # 10. 수정
+│  │  provider.tf       # 1. 수정
+│  │  sg.tf             # 유지
+│  │  variables.tf      # 2. 수정 
+│  │  version.tf        # 유지
+│  │  vpc.tf            # 유지
 │  │  
-│  ├─ kinesis.tf         # 4. 신규
-│  ├─ firehose.tf        # 7. 신규
-│  ├─ s3.tf              # 5. 신규
+│  ├─ kinesis.tf        # 4. 신규
+│  ├─ firehose.tf       # 7. 신규
+│  ├─ s3.tf             # 5. 신규
 ```
 
 # 파이썬 검토 (kinesis로 전송 조정)
@@ -101,11 +103,10 @@ Fargate → Kinesis → Firehose → S3 확인 (jsonl, gzip)
        Faker
        boto3  # AWS SDK 패키지
        ```
-       - 로컬 pc에 boto3 설치
+       - 로컬 PC에 boto3 설치
        ```
               pip install boto3
        ```
-
 - config.py
        - ecs 세팅한 환경변수 전달
 - output.py
@@ -113,4 +114,57 @@ Fargate → Kinesis → Firehose → S3 확인 (jsonl, gzip)
 - main.py
        - 생성자 매개변수 조정
 
+
+
 # bat/shell 검토
+- 코드 수정 => 이미지 수정 => ecr 업데이트 => setup.bat/sh
+```
+# setup.bat
+docker build --no-cache --platform linux/amd64 -t "%REPO%:latest" "%GENERATOR%"
+
+# setup.sh
+docker build --no-cache --platform linux/amd64 -t "$REPO:latest" "$GENERATOR"
+```
+
+# 브론즈 데이터 생성
+- 명령 옵션
+```
+ecommerce       도메인
+5               5초 실행
+5               기본 5 RPS
+0.05            오염 데이터 5%
+1               Fargate Task 1개
+ap-northeast-2  서울 리전
+1               Time Scale 1배
+```
+- 명령
+- 25건 로그 생성
+- Cloudwatch 로그 기록됨 (stdouT 설정이 기본)
+- kinesis -> firehose -> s3 기록됨 (ecs 설정에 환경변수로 세팅되어 있음)
+- s3에서 로그 발생후 언제 확인 가능한가? => 약간의 텀 존재함, 1분 이후 혹은 1Mib(firehose 버퍼링 조건) 초과 이후 확인 가능함
+```
+# 윈도우
+scripts/run-generator.bat ecommerce 5 5 0.05 1 ap-northeast-2 1
+
+# linux,mac
+scripts/ ./run-generator.sh ecommerce 5 5 0.05 1 ap-northeast-2 1
+
+```
+-----------------------------------------------------------------------------------------------------------
+|                                                 RunTask                                                 |
++---------------------------------------------------------------------------------------------------------+
+|  arn:aws:ecs:ap-northeast-2:827913617635:task/de-ai-09-loggen-cluster/0a1923b7d479498cb8b51619f44db323  |
++---------------------------------------------------------------------------------------------------------+
+Run ID: loggen-20260820-145055
+Follow logs: aws logs tail '/ecs/de-ai-09-loggen' --follow --region 'ap-northeast-2'
+```
+
+- 실시간 로그 확인
+```
+aws logs tail "/ecs/de-ai-09-loggen" --follow --region "ap-northeast-2"
+---
+{"schema_version":"1.0","record_type":"application_log","event_id"......}
+```
+
+# jsonl => GZIP 변경하여 저장 (실습)
+- 동일 로그 발생 => 최종 결과문 GZIP으로 저장
