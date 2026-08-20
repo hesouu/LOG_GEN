@@ -85,3 +85,8 @@ resource "aws_iam_role_policy" "firehose" {
   role = aws_iam_role.firehose.id
   policy = data.aws_iam_policy_document.firehose_s3.json
 }
+
+# ecs -> task 에서 kinesis 전송시 role을 별도 추가
+# ecs task role
+# execute role (기존, task 실행 권한)
+# kinesis role (신규추가, kinesis로 데이터 putRecord 권한 추가)
