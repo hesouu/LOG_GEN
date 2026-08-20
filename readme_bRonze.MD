@@ -80,7 +80,7 @@ Fargate → Kinesis → Firehose → S3 확인 (jsonl, gzip)
 ├─infra
 │  │  ecr.tf            # 유지
 │  │  ecs.tf            # 유지
-│  │  iam.tf             # 6. 수정
+│  │  iam.tf             # 6. 수정 (1.firehose관련, 2. ecs-task에서 kinesis put 처리)
 │  │  locals.tf          # 3. 수정
 │  │  logs.tf
 │  │  outputs.tf
@@ -91,7 +91,7 @@ Fargate → Kinesis → Firehose → S3 확인 (jsonl, gzip)
 │  │  vpc.tf             # 유지
 │  │  
 │  ├─ kinesis.tf         # 4. 신규
-│  ├─ firehose.tf        # 신규
+│  ├─ firehose.tf        # 7. 신규
 │  ├─ s3.tf              # 5. 신규
 ```
 
