@@ -89,7 +89,11 @@ def run() -> int:
     )
 
     # 6. stdout/file/both 설정에 맞는 출력기 생성
-    output = JsonlOutput(settings.output_mode, settings.log_file)
+    output = JsonlOutput(settings.output_mode, settings.log_file,
+                        # [브론즈 추가]
+                        kinesis_enabled     = settings.kinesis_enabled,
+                        kinesis_stream_name = settings.kinesis_stream_name
+                         )
 
     # 7. ECS 종료 시 주로 전달되는 SIGTERM 신호 처리 함수 등록
     signal.signal(signal.SIGTERM, _handle_stop)
