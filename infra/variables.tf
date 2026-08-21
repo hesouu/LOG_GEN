@@ -141,7 +141,7 @@ variable "flink_start_application" {
 # LATEST : flink 가동 후 들어오는 데이터만 처리
 # TRIM_HORIZON : kinesis에 남아 있는 과거 로그 데이터 모두 처리 -> 재처리/테스트/전체 데이터 처리
 
-variable "flink_source_init_poisition" {
+variable "flink_source_init_position" {
   description = "flink가 데이터 처리시 입력왼쪽의 어디서부터 처리할 것인가 설정"
   type        = string
   default     = "LATEST"
@@ -151,7 +151,7 @@ variable "flink_source_init_poisition" {
     condition = contains([
       "LATEST",
       "TRIM_HORIZON"
-    ], var.flink_source_init_poisition)
-    error_message = "flink_source_init_poisition is only LATEST or TRIM_HORIZON"
+    ], var.flink_source_init_position)
+    error_message = "flink_source_init_position is only LATEST or TRIM_HORIZON"
   }
 }
