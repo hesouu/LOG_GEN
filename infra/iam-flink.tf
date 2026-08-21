@@ -86,9 +86,10 @@ data "aws_iam_policy_document" "flink" {
   } 
 }
 
+# 위에서 만든 기본 role에 아래에서 조회한 정책 부여
 # firehose_s3를 통해서 조회한 권한을 aws_iam_role.firehose 에 부여
 resource "aws_iam_role_policy" "firehose" {
-  name   = "${var.project_name}-firehose-s3-policy"
-  role   = aws_iam_role.firehose.id
-  policy = data.aws_iam_policy_document.firehose_s3.json
+  name   = "${var.project_name}-firehose-policy"
+  role   = aws_iam_role.flink.id
+  policy = data.aws_iam_policy_document.flink.json
 }
