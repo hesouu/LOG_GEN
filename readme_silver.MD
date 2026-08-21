@@ -90,15 +90,15 @@ Kinesis Raw (2가지 방향성으로 전송)
 flink/
 ├── app/
 │   ├── main.py         : flink 앱 엔트리포인트(실행파트), 브론즈 kinesis 읽기, 
-│   │                     transform 모듈 불러서 clean 작업 진행, 실버 kinesis 가공된(전처리된) 데이터 전송
-│   └── transform.py    : 정제, 전처리 등 데이터 처리 작업 진행
-├── target/             : 빌드 후 생성 : maven 빌드 결과물로 생성
-│   └── *.zip           : 빌드 후 생성 : 빌드 결과로 생성된 flink앱
+│   │                     transform 모둘 불러서 clean 작업진행, 실버 kinesis 가동된(전처리된) 데이터 전송
+│   └── transform.py    : 정제, 전처리 등 데이터 처리 작업 진
+├── target/             : 빌드후 생성 : maven 빌드 결과물로 생성
+│   └── *.zip           : 빌드후 생성 : 빌드 결과로 생성된  flink 앱
 ├── assembly/
 │   └── assembly.xml    : flink 앱(zip 파일) 성분 구성에 대한 정의 (*.py, pyflink-dependencies.jar)
 │
-├── application_properties.json : 로컬에서 실행시 input/output kinEsis 설정
-├── pom.xml             : 의존성 파일들 다운로드 jar 생성, zip 패키징 실행
+├── application_properties.json : 로컬에서 실행시 input/output kinesis 설정
+├── pom.xml             : 의존성 파일들 다운로드, jar 생성, zip 패키징 실행
 ├── README.md
 └── .gitignore
 ```
@@ -108,10 +108,12 @@ flink/
 # 윈도우
 winget search Microsoft.OpenJDK 
 winget install Microsoft.OpenJDK.11
-java -version
+  java -version
+
 choco install maven or scoop install main/maven or 직접설치
 https://maven.apache.org/download.cgi?utm_source=chatgpt.com 접속 > apache-maven-3.9.16-bin.zip 다운
 bin 폴더를 path 설정
+  mvn -version
 
 # 맥
 brew install openjdk@11 maven
@@ -124,5 +126,33 @@ mvn -version
 - 빌드
 ```
 ./scripts/build-flink.bat
-sh  ./scripts/build-flink.sh
+sh ./scripts/build-flink.sh
+```
+
+# 세팅 
+```
+# 인프라 구성
+terraform -chdir=infra fmt
+terraform -chdir=infra validate
+terraform -chdir=infra plan
+
+./scripts/setup.bat
+
+# Flink 서비스 진입 -> 어플리케이션의 상태 체크 -> 실행 상태가 확인되면 (그린라이트)
+
+# 로그 발송 -> 1분 전후로 s3/버킷/silver 생성 여부 확인 -> 하위에 로그가 존재함 => 완료!!
+
+```
+
+# 트레블 슈팅
+```
+# 등록된 리소스 확인
+terraform state list
+
+# AlreadyExists => 예전게 남아 있는 경우 
+# 리소스 등록분에서 누락된 부분이 잇으면 수동 연결
+# terraform import 리소스명 리소스값
+terraform import aws_ecr_repository.generator de-ai-09-loggen-repo
+
+
 ```

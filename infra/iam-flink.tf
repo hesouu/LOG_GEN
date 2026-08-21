@@ -81,7 +81,7 @@ data "aws_iam_policy_document" "flink" {
       "logs:PutLogEvents"
     ]
     resources = [
-      "${aws_cloudwatch_log_group.flink.arn}"
+      "${aws_cloudwatch_log_group.flink.arn}:*" # 수정사항 :*
     ]
   }
 }

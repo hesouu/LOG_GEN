@@ -167,10 +167,10 @@ def main() -> None:
     properties = _load_application_properties()
     # 로컬 또는 AWS 환경의 application_properties.json 설정값을 읽는다.
 
-    input_props = _property_map(properties, "InputStream")
+    input_props = _property_map(properties, "InputStream0")
     # Runtime Property에서 Bronze/Raw 입력 Kinesis 설정 그룹인 InputStream0을 가져온다.
 
-    output_props = _property_map(properties, "OutputStream")
+    output_props = _property_map(properties, "OutputStream0")
     # Runtime Property에서 Silver 출력 Kinesis 설정 그룹인 OutputStream0을 가져온다.
 
     input_stream_arn = input_props["stream.arn"]

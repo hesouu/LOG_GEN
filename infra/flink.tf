@@ -39,7 +39,7 @@ resource "aws_kinesisanalyticsv2_application" "silver" {
   start_application = var.flink_start_application
 
   application_configuration {
-    # 스냅샷 사용 x
+    # 스냅샷 사용 x (유료)
     application_snapshot_configuration {
       snapshots_enabled = false
     }
