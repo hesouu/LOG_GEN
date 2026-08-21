@@ -22,7 +22,7 @@ TASK_DEFINITION="$(terraform -chdir="$INFRA" output -raw ecs_task_definition_arn
 SECURITY_GROUP="$(terraform -chdir="$INFRA" output -raw security_group_id)"
 SUBNET_CSV="$(terraform -chdir="$INFRA" output -json public_subnet_ids | jq -r 'join(",")')"
 
-OVERRIDE_FILE="$(mktemp)"d
+OVERRIDE_FILE="$(mktemp)"
 jq -n \
   --arg domain "$DOMAIN" \
   --arg duration "$DURATION_SECONDS" \

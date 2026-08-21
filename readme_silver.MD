@@ -82,3 +82,47 @@ Kinesis Raw (2가지 방향성으로 전송)
 | **신규**     | `flink.tf`      | Managed Flink + `flink/`에 코드 업로드                 |
 | **신규**     | `flink-logs.tf` | Flink CloudWatch 로그                              |
 | **수정**     | `outputs.tf`    | Silver/Flink 관련 Output 추가                        |
+
+
+# flink 앱 구성
+- 구성
+```
+flink/
+├── app/
+│   ├── main.py         : flink 앱 엔트리포인트(실행파트), 브론즈 kinesis 읽기, 
+│   │                     transform 모듈 불러서 clean 작업 진행, 실버 kinesis 가공된(전처리된) 데이터 전송
+│   └── transform.py    : 정제, 전처리 등 데이터 처리 작업 진행
+├── target/             : 빌드 후 생성 : maven 빌드 결과물로 생성
+│   └── *.zip           : 빌드 후 생성 : 빌드 결과로 생성된 flink앱
+├── assembly/
+│   └── assembly.xml    : flink 앱(zip 파일) 성분 구성에 대한 정의 (*.py, pyflink-dependencies.jar)
+│
+├── application_properties.json : 로컬에서 실행시 input/output kinEsis 설정
+├── pom.xml             : 의존성 파일들 다운로드 jar 생성, zip 패키징 실행
+├── README.md
+└── .gitignore
+```
+
+- 빌드전 설치 (java, maven)
+```
+# 윈도우
+winget search Microsoft.OpenJDK 
+winget install Microsoft.OpenJDK.11
+java -version
+choco install maven or scoop install main/maven or 직접설치
+https://maven.apache.org/download.cgi?utm_source=chatgpt.com 접속 > apache-maven-3.9.16-bin.zip 다운
+bin 폴더를 path 설정
+
+# 맥
+brew install openjdk@11 maven
+export JAVA_HOME=$(/usr/libexec/java_home -v 11)
+export PATH="$JAVA_HOME/bin:$PATH"
+java -version
+mvn -version
+```
+
+- 빌드
+```
+./scripts/build-flink.bat
+sh  ./scripts/build-flink.sh
+```
