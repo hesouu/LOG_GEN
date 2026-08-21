@@ -76,9 +76,9 @@ Kinesis Raw (2가지 방향성으로 전송)
 | **수정**     | `locals.tf`     | Silver Kinesis/Flink/Firehose 이름 추가              |
 | **수정**     | `variables.tf`  | Flink Runtime, Parallelism, Silver Shard 등 변수 추가 |
 | **수정**     | `firehose.tf`   | Bronze 오류 경로를 `errors/bronze/`로 정리               |
-| **수정**     | `outputs.tf`    | Silver/Flink 관련 Output 추가                        |
 | ---------- | --------------- | ------------------------------------------------ |
 | **신규**     | `iam-flink.tf`  | Flink + Silver Firehose IAM                      |
 | **신규**     | `silver.tf`     | Silver Kinesis + Silver Firehose 생성              |
 | **신규**     | `flink.tf`      | Managed Flink + `flink/`에 코드 업로드                 |
 | **신규**     | `flink-logs.tf` | Flink CloudWatch 로그                              |
+| **수정**     | `outputs.tf`    | Silver/Flink 관련 Output 추가                        |

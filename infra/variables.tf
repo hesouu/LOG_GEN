@@ -145,7 +145,7 @@ variable "flink_source_init_poisition" {
   description = "flink가 데이터 처리시 입력왼쪽의 어디서부터 처리할 것인가 설정"
   type        = string
   default     = "LATEST"
-  
+
   # 변수의 값으로 올수 있는 내용들을 제약
   validation {
     condition = contains([
