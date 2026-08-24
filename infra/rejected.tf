@@ -4,7 +4,7 @@
 # flink에서 전송된 데이터를 획득 -> firehose로 전송
 resource "aws_kinesis_stream" "rejected" {
   # 리소스명 수정
-  name             = local.rejected_kinesis_stream_name
+  name = local.rejected_kinesis_stream_name
   # 샤드, 보관일 별도 설정 없어서 공통 적용 -> 리소스별로 상이할수 있음
   shard_count      = var.rejected_kinesis_shard_count
   retention_period = var.silver_kinesis_retention_hour

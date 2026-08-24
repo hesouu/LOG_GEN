@@ -54,3 +54,24 @@ output "firehose_name" {
 output "s3_bucket_name" {
   value = aws_s3_bucket.data.bucket
 }
+
+
+# 실버, rejected 추가
+output "silver_kinesis_stream_name" {
+  value = aws_kinesis_stream.silver.name
+}
+output "silver_kinesis_stream_arn" {
+  value = aws_kinesis_stream.silver.arn
+}
+output "silver_firehose_name" {
+  value = aws_kinesis_firehose_delivery_stream.silver.name
+}
+output "rejected_kinesis_stream_name" {
+  value = aws_kinesis_stream.rejected.name
+}
+output "rejected_kinesis_stream_arn" {
+  value = aws_kinesis_stream.rejected.arn
+}
+output "rejected_firehose_name" {
+  value = aws_kinesis_firehose_delivery_stream.rejected.name
+}
