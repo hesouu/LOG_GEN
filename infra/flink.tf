@@ -76,6 +76,16 @@ resource "aws_kinesisanalyticsv2_application" "silver" {
           "aws.region" = var.aws_region
         }
       }
+      # [REJECT] rejected kinesis, flink에서 출력하는 대상
+      property_group {
+        property_group_id = "RejectStream0"
+
+        property_map = {
+          "stream.arn" = aws_kinesis_stream.rejected.arn
+          "aws.region" = var.aws_region
+        }
+      }
+
 
       property_group {
         # AWS Managed Flink를 인식하는 예약 그룹명 (실행 옵션) -> 고정값

@@ -7,9 +7,8 @@ import os
 from pyflink.table import DataTypes, EnvironmentSettings, TableEnvironment
 # 일반 파이썬 함수를 Flink SQL에서 호출 가능하게 등록 처리(UDF : User Defined Function)
 from pyflink.table.udf import udf
-from transform import clean_event_payload
 # [REJECT]
-from transform import reject_event_payload
+from transform import clean_event_payload,reject_event_payload
 
 # 테라폼이 인프라 구성시 자동으로 설정
 MANAGED_PROPERTIES_PATH = "/etc/flink/application_properties.json"
