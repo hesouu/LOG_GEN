@@ -7,6 +7,39 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 SILVER_SCHEMA_VERSION = "1.0"
+# [REJECT] reject 데이터 관리 버전
+REJECT_SCHEMA_VERSION = "1.0"
+
+# 데이터 사전 체크 -> 오류 사유를 추가 반환
+def _parse_payload(payload: Any):
+    # 1. 데이터에 문제가 있으면 => none 처리
+        # 1-1. 입력 데이터 자체가 없으면 none               
+        if payload is None:
+            return None, "payload_null"
+        # 1-2. 데이터의 타입이 bytes 라면 utf-8 인코딩 처리 -> 문제발생 -> none
+        if isinstance(payload, bytes):              
+            try:
+                payload = payload.decode("utf-8")
+            except UnicodeDecodeError:
+                return None, "invalid_utf8"
+        # 1-3. 데이터가 문자열 아니면 문자열 강제 변환
+        if not isinstance(payload, str):
+            payload = str(payload)
+    
+        # 문자열 => json 객체로 파싱
+        # 2. 파싱
+        try:
+            event = json.loads(payload)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            # 실패하면 None
+            return None, "invalid_json"
+        # 3. 파싱 결과 검사, dict 타입이 아니면 none
+        if not isinstance(event, dict):
+            return None, "no_json_object"
+
+        # 4. 정상 파싱
+        return event, None
+
 
 def clean_event_payload(payload: Any) -> Optional[str]:
     # 1. 데이터에 문제가 있으면 => none 처리
