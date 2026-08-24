@@ -81,7 +81,7 @@ data "aws_iam_policy_document" "flink" {
       "logs:PutLogEvents"
     ]
     resources = [
-      "${aws_cloudwatch_log_group.flink.arn}:*" # 수정사항 :*
+      "${aws_cloudwatch_log_group.flink.arn}:*" # <- 수정
     ]
   }
 }
@@ -144,4 +144,54 @@ resource "aws_iam_role_policy" "firehose_silver" {
   name   = "${var.project_name}-firehose-silver-s3-policy"
   role   = aws_iam_role.firehose_silver.id
   policy = data.aws_iam_policy_document.firehose_silver.json
+}
+
+# rejected용 데이터 파이프라인 구성을 위한 firehose role 작성
+data "aws_iam_policy_document" "firehose_rejected_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["firehose.amazonaws.com"]
+    }
+  }
+}
+resource "aws_iam_role" "firehose_rejected" {
+  name               = "${var.project_name}-firehose-rejected-role"
+  assume_role_policy = data.aws_iam_policy_document.firehose_rejected_assume.json
+}
+data "aws_iam_policy_document" "firehose_rejected" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "kinesis:DescribeStream",
+      "kinesis:DescribeStreamSummary",
+      "kinesis:GetShardIterator",
+      "kinesis:GetRecords",
+      "kinesis:ListShards"
+    ]
+    resources = [
+      aws_kinesis_stream.rejected.arn
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:AbortMultipartUpload",
+      "s3:GetBucketLocation",
+      "s3:ListBucket",
+      "s3:PutObject"
+    ]
+    resources = [
+      aws_s3_bucket.data.arn,       # 해당 버킷
+      "${aws_s3_bucket.data.arn}/*" # 해당 버킷 이하 모든 경로
+    ]
+  }
+}
+resource "aws_iam_role_policy" "firehose_rejected" {
+  name   = "${var.project_name}-firehose-rejected-s3-policy"
+  role   = aws_iam_role.firehose_rejected.id
+  policy = data.aws_iam_policy_document.firehose_rejected.json
 }
