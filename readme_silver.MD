@@ -212,5 +212,11 @@ Bronze Kinesis -> 배치 프로세싱을 통해 오염 데이터만 추출하여
 - Rejected Kinesis -> Firehose > S3 Rejected/ : 인프라 구성
 
 ## 인프라 구성
-- 인프라 구성 -> 적용
-- lfink 수정 -> 테스트 -> 오염데이터 비율 30% 상승 -> 로그 발생 -> 오염데이터 저장량 확인
+- 추가 및 수정
+  - 인프라 구성 -> 적용
+    - 대상 : kinesis 신규, kinesis->firehose, iam, flink, locals, variables, outputs    
+  - flink 수정 -> 테스트 -> 오염데이터를 비율 30% 상승 -> 로그 발생 -> 오염데이터 저장 확인
+- 실행 절차
+  - flink 앱 빌드
+  - 인프라 업데이트 및 앱 배포
+  - 로그 제너레이터 가동 -> 오염도를 30% 올려서 잘 수집되도록 구성
