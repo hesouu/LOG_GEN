@@ -8,6 +8,8 @@ from pyflink.table import DataTypes, EnvironmentSettings, TableEnvironment
 # 일반 파이썬 함수를 Flink SQL에서 호출 가능하게 등록 처리(UDF : User Defined Function)
 from pyflink.table.udf import udf
 from transform import clean_event_payload
+# [REJECT]
+from transform import reject_event_payload
 
 # 테라폼이 인프라 구성시 자동으로 설정
 MANAGED_PROPERTIES_PATH = "/etc/flink/application_properties.json"
@@ -18,6 +20,13 @@ IS_LOCAL = bool(os.environ.get("IS_LOCAL"))
 def clean_event(payload: str):
     # 정제, 전처리 전담 함수를 래핑
     return clean_event_payload(payload)
+
+# [REJECT]
+@udf(result_type=DataTypes.STRING())
+def reject_event(payload: str):
+    # 오염데이터 전담 함수를 래핑
+    return reject_event_payload(payload)
+
 
 # flink 경로 계산을 위한 함수
 def _project_dir() -> str:
