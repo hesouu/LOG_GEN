@@ -42,7 +42,7 @@ IS_LOCAL = bool(os.environ.get("IS_LOCAL"))
 
 @udf(result_type=DataTypes.STRING())
 # 아래 clean_event 함수를 Flink SQL에서 호출할 수 있는 Python UDF로 변환한다.
-# result_type=STRING은 이 함수가 정제된 JSON 문자열 또는 NULL을 반환한다는 의미다.
+# result_type=STRING은 이 함수가 정제된 JSON 문자열 또는 NULL을 반환한다는 의미다. , 정제, 전처리 전담 함수를 래핑
 def clean_event(payload: str):
     # Flink SQL에서 전달받은 STRING payload를 인자로 받는다.
 
@@ -165,7 +165,7 @@ def main() -> None:
     # Streaming 모드의 Flink TableEnvironment를 생성한다.
 
     properties = _load_application_properties()
-    # 로컬 또는 AWS 환경의 application_properties.json 설정값을 읽는다.
+    # 로컬 또는 AWS 환경의 application_properties.json 설정값을 읽는다. , aws 환경등 정보 로드(설정값) -> 테라폼으로 구성시
 
     input_props = _property_map(properties, "InputStream0")
     # Runtime Property에서 Bronze/Raw 입력 Kinesis 설정 그룹인 InputStream0을 가져온다.
@@ -201,10 +201,10 @@ def main() -> None:
     # 따라서 여기서 도메인별 컬럼 스키마를 고정하지 않고 레코드 전체를 STRING payload 하나로 받는다.
     # 'format'='raw'를 사용하면 Kinesis 레코드 값을 그대로 문자열 형태로 전달할 수 있다.
     table_env.execute_sql(
-        # Flink SQL DDL을 실행하여 Bronze Kinesis Stream을 raw_stream이라는 논리 테이블로 등록한다.
+        # Flink SQL DDL을 실행하여 Bronze Kinesis Stream을 bronze_stream이라는 논리 테이블로 등록한다.
 
         f"""
-        CREATE TABLE raw_stream (
+        CREATE TABLE bronze_stream (
             payload STRING
         )
         WITH (
@@ -216,7 +216,7 @@ def main() -> None:
         )
         """
         # CREATE TABLE은 실제 데이터를 복사하지 않는다.
-        # raw_stream이라는 Table API 이름과 실제 Kinesis Stream 사이의 연결 정보를 Flink에 등록한다.
+        # bronze_stream이라는 Table API 이름과 실제 Kinesis Stream 사이의 연결 정보를 Flink에 등록한다.
         # payload STRING: Kinesis 레코드 전체를 하나의 문자열 컬럼으로 취급한다.
         # connector='kinesis': 이 테이블의 실제 데이터 소스가 Amazon Kinesis임을 지정한다.
         # stream.arn: 읽을 Kinesis Stream을 ARN으로 지정한다.
@@ -258,7 +258,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Bronze -> Silver 변환 및 전송
     # ------------------------------------------------------------------
-    # raw_stream에서 payload를 읽는다.
+    # bronze_stream에서 payload를 읽는다.
     # Python UDF clean_event(payload)를 적용하여 transform.py의 정제 규칙을 실행한다.
     # JSON 파싱 실패, JSON Object가 아닌 데이터 등은 clean_event가 None을 반환한다.
     # Flink SQL에서는 Python None이 SQL NULL로 변환된다.
@@ -272,11 +272,11 @@ def main() -> None:
         SELECT cleaned_payload
         FROM (
             SELECT clean_event(payload) AS cleaned_payload
-            FROM raw_stream
+            FROM bronze_stream
         )
         WHERE cleaned_payload IS NOT NULL
         """
-        # 내부 SELECT: raw_stream의 각 payload에 clean_event UDF를 적용한다.
+        # 내부 SELECT: bronze_stream의 각 payload에 clean_event UDF를 적용한다.
         # AS cleaned_payload: UDF 결과에 cleaned_payload라는 임시 컬럼명을 붙인다.
         # 외부 SELECT: 정제 결과 컬럼만 선택한다.
         # WHERE ... IS NOT NULL: 정제 실패 레코드를 제외한다.
@@ -294,6 +294,6 @@ def main() -> None:
 
 if __name__ == "__main__":
     # 이 파일이 import된 것이 아니라 python main.py처럼 직접 실행된 경우에만 아래 main()을 호출한다.
-
+    # 프로그램 시작점 -> main함수 호출 하면서 실행 (함수지향적 프로그램)
     main()
     # 위에서 정의한 PyFlink Streaming 애플리케이션을 실제로 시작한다.

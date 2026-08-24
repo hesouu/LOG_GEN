@@ -156,3 +156,61 @@ terraform import aws_ecr_repository.generator de-ai-09-loggen-repo
 
 
 ```
+
+
+
+
+# 확인
+- 실시간 스트리밍 데이터 처리 관점
+  - 실버 레벨 추가 부분
+    - flink 앱 코드 확인
+      - 추후 필요시 코드 업그레이드(기능 추가 부여)
+
+    - 오염된 데이터 삭제(현재) => 별도 보관(저장) => 추후 해당 원인 분석 할수 있게 보관 (확장)
+    - 저장데이터 -> jsonl (gzip) => parquet 저장(glue 사용)
+    - flink 역활 lambda 대체 (차이점 이해)
+  - 실버 -> 골드 추가
+    - flink or lambda 사용 가능 => 최종 목표 형태로 가공
+    - 중간 과정 동일
+    - 최종 s3 적제(parquet) / opensearch
+  - 대시보드 (프로메테우스, 그라파다 등 연결)
+    - s3=>athena 쿼리질의, opensearch 검색질의 => 대시보드상 실시간 모니터링 데이터 조회에 응답가능
+
+- 로그 생성기 => kinesis => firehose => s3(브론즈) 저장
+  - 배치 프로세싱 (airflow 기반) + 메탈리온 아킥텍처 적용
+    - 특정 주기 단위로 airflow 작동 => 브론즈 -> 실버 -> 골드 -> 최종 산출물(대시보드, 래포트) 구성
+
+- 카프카 (뒤에서 체크)
+- ELK, EFK
+- step function, eventbridge 
+
+# flink 앱 코드 확인
+- 80% 코드 유지
+  - 필요한 기능만 추가하는 구조로 활용
+  - 함수에서 핵심 부분(정제, 전처리)만 커스텀 하면 기능 활용
+  - 리소스가 변경되면 보정(설정값)
+
+# 오염된 데이터 삭제(현재) => 별도 보관(저장)
+## 개요
+- 추후 해당 원인 분석 할수 있게 보관 (확장)
+- 구성
+```
+Bronze Kinesis -> 배치 프로세싱을 통해 오염 데이터만 추출하여 주기적으로 모니터링 방법
+      ↓
+    Flink
+      │
+      ├─ 정상 → Silver Kinesis → Firehose → S3 silver/
+      │
+      └─ 비정상 → Rejected Kinesis
+                       ↓
+                    Firehose
+                       ↓
+                  S3 rejected/ => 차후 배치 프로세싱을 통해 => 근본적인 문제 해결
+```
+- 정상과 비정상은 flink에서 연결
+  - none으로 처리되는 부분을 Rejected Kinesis로 전달하도록 sql 수정
+- Rejected Kinesis -> Firehose > S3 Rejected/ : 인프라 구성
+
+## 인프라 구성
+- 인프라 구성 -> 적용
+- lfink 수정 -> 테스트 -> 오염데이터 비율 30% 상승 -> 로그 발생 -> 오염데이터 저장량 확인
