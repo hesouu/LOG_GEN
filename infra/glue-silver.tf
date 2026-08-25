@@ -42,11 +42,11 @@ resource "aws_glue_catalog_table" "silver" {
     # day
     "projection.day.tpye"  = "integer"
     "projection.day.range" = "1,31"
-    "projection.month.digits" = "2"
+    "projection.day.digits" = "2"
     # hour
     "projection.hour.tpye"  = "integer"
     "projection.hour.range" = "0,23"
-    "projection.month.digits" = "2"
+    "projection.hour.digits" = "2"
 
   }
 }
