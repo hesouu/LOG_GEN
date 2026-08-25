@@ -48,5 +48,9 @@ resource "aws_glue_catalog_table" "silver" {
     "projection.hour.range" = "0,23"
     "projection.hour.digits" = "2"
 
+    # 파티션 S3 경로 규칙
+    # sql : ~ where year = '2026' ...
+    # $${year} => ${year} 자체로 전달하기 위해서 앞에 $ 추가한 표현
+    "storage.location.template" = "s3://${aws_s3_bucket.data.bucket}/silver/year=$${year}/month=$${month}/day=$${day}/hour=$${hour}"
   }
 }
