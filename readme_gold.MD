@@ -28,7 +28,7 @@ Silver Kinesis
     │
     └── [추가] Lambda : 의도적으로 Silver Kinesis에서 이미 정제된 데이터를 실시간으로 받아서 실시간 파이프라인 흐름 유지
               ↓
-         비즈니스 가공
+         비즈니스 가공 (분석용 데이터로 구성, 집계, 통계, ...) -> pandas / polars / spark
               ↓
          Gold Kinesis
               ↓
@@ -42,3 +42,11 @@ Silver Kinesis
               ↓
          Glue / Athena
 ```
+
+
+# 인프라 및 코드 구성
+- lambda/lambda_function.py 신규
+- infra/gold-lambda.py 신규
+- infra/glue-gold.py 신규
+- infra/outputs.tf 내용 추가
+- lambda 서비스 배포 작업 (필요한 추가파일등 고려)
