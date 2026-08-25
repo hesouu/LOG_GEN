@@ -217,6 +217,74 @@ Bronze Kinesis -> 배치 프로세싱을 통해 오염 데이터만 추출하여
     - 대상 : kinesis 신규, kinesis->firehose, iam, flink, locals, variables, outputs    
   - flink 수정 -> 테스트 -> 오염데이터를 비율 30% 상승 -> 로그 발생 -> 오염데이터 저장 확인
 - 실행 절차
-  - flink 앱 빌드
-  - 인프라 업데이트 및 앱 배포
+  - flink 앱 빌드 + 인프라 업데이트 및 앱 배포
+    ```
+      scripts\setup-flink.bat
+      
+      sh ./scripts/setup-flink.sh
+
+      ----
+      scripts\flink-status.bat
+      ----------------------------------------------------------
+      |                   DescribeApplication                  |
+      +-------------------------------+--------------+---------+
+      |             Name              |   Runtime    | Status  |
+      +-------------------------------+--------------+---------+
+      |  de-ai-09-loggen-silver-flink |  FLINK-1_20  |  READY  |
+      +-------------------------------+--------------+---------+
+
+      -----
+      scripts\flink-start.bat
+
+      scripts\flink-status.bat
+      # READY -> STARTING -> RUNNING
+
+      ----- 
+      # RUNNING 상태가 확인되면 -> 로그 발생, 오염도 30% 확대
+      scripts\run-generator.bat ecommerce 30 10 0.30 1 ap-northeast-2 1
+
+      -----
+      # s3에서 reject 폴더 하위 데이터 확인
+
+      -----
+      # flink 중단
+      scripts\flink-stop.bat
+      -----
+      # 중단 후 확인
+      scripts\flink-status.bat
+      ----------------------------------------------------------                                               
+      |                   DescribeApplication                  |
+      +-------------------------------+--------------+---------+
+      |             Name              |   Runtime    | Status  |
+      +-------------------------------+--------------+---------+
+    ```
   - 로그 제너레이터 가동 -> 오염도를 30% 올려서 잘 수집되도록 구성
+
+
+# parquet 저장 => 스키마 필요 => 열검색, 기반 => Glue 제공 (데이터베이스, 테이블, 크롤러, job등 다양하게 제공)
+## glue
+- 데이터에 관련된 통합 서비스
+- 데이터를 구조를 정의, 이를 기반으로 쿼리 수행(골드 레이어 적합한 데이터 형태로 추출(집계, 통계,..=>분석))등 기반 제공
+- 데이터베이스, 테이블, 스키마, 크롤러(데이터를 보고 자동으로 스키마 구성), ETL job 시각적 구성, ...
+
+## parquet
+- `대규모 빅데이터를 효율적으로 저장`하고 `빠르게 조회`하기 위해 만든 `열(Column) 기반 오픈소스 파일 포맷`
+- 같은 양의 데이터를 더 작은 공간을 사용, 검색 더 빠르고, 호환 거의다 지원
+
+## 인프라 수정/추가
+- silver.tf의 firehose 저장 파트의 저장 부분 수정
+  - silver layer를 통해 저장된 데이터 => 현재:gzip 파일, 대체:parquet 형태
+  - compression_format = "GZIP" => UNCOMPRESSED
+  - 압축 담당 SNAPPY 담당
+- glue-silver.tf
+  - s3 silver/.... 저장되는 parquet 데이터의 `스키마` 정의
+  - json -> parquet 으로 변환할때 스키마 참조
+  - Athena(raw데이터, parquet등 압축데이터를 대상으로 쿼리 가능)이 해당 파일을 대상으로 SQL 수행시 테이블/스키마 제공
+  - s3 저장될대, 파티션 형태로 저장(year/month/day/hour)된 형태에서 sql 수행 가능(파티션 활용)
+- iam-flink.tf
+  - 기존 role에 glue 권한 추가
+- outputs.tf
+  - glue 관련 이름, 리소스등 출력
+
+
+### silver.tf (수정)

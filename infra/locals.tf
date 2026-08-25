@@ -26,7 +26,7 @@ locals {
   silver_firehose_name       = "${var.project_name}-silver-firehose"
   flink_application_name     = "${var.project_name}-silver-flink"
   flink_log_group_name       = "/aws/kinesis/analysis/${var.project_name}-silver-flink"
-  flink_log_stream_name      = "var.project_name}-kinesis-analysis-log-stream"
+  flink_log_stream_name      = "${var.project_name}-kinesis-analysis-log-stream"
 }
 
 # [실버 + 오염데이터처리 추가] , rejected 프리픽스 추가

@@ -48,6 +48,17 @@ data "aws_iam_policy_document" "flink" {
       aws_kinesis_stream.silver.arn
     ]
   }
+  statement {
+    sid    = "WriteRejectKinesis"
+    effect = "Allow"
+    actions = [
+      "kinesis:PutRecord",
+      "kinesis:PutRecords"
+    ]
+    resources = [
+      aws_kinesis_stream.rejected.arn
+    ]
+  }
   # s3에 저장된 flink 어플리케이션 코드(zip 형태로 구성)
   statement {
     sid    = "ReadFlinkCode"
