@@ -150,6 +150,16 @@ data "aws_iam_policy_document" "firehose_silver" {
       "${aws_s3_bucket.data.arn}/*" # 해당 버킷 이하 모든 경로
     ]
   }
+  # [GLUE] Firehose가 JSON -> Parquet로 변환 처리시 GLue catalog의 Schema 조회할수 있는 권한 부여
+  statement {
+    effect = "Allow"
+    actions = [
+      "glue:GetTable",
+      "glue:GetTableVersion",
+      "glue:GetTableVersions"
+    ]
+    resources = ["*"]
+  }
 }
 resource "aws_iam_role_policy" "firehose_silver" {
   name   = "${var.project_name}-firehose-silver-s3-policy"

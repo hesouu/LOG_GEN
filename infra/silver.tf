@@ -46,12 +46,12 @@ resource "aws_kinesis_firehose_delivery_stream" "silver" {
     # S3 버킷 및 S3 오류 출력 접두사 시간대
     custom_time_zone = "Asia/Seoul"
 
-    [GLUE] 컨버전에 대한 구성 설정 (JSON => Glue Schema(사전에 정의된 테이블/스키마 <- 데이터구조/타입) => parquet)
-    data_fotmat_conversion_configuration {
+    # [GLUE] 컨버전에 대한 구성 설정 (JSON => Glue Schema(사전에 정의된 테이블/스키마 <- 데이터구조/타입) => parquet)
+    data_format_conversion_configuration {
       # 구성 정보 사용
       enabled = true
       # 입력원 flink 통해서 나온 JSON임
-      input_foramt_configuration{
+      input_format_configuration {
         # ser_de (serializer/deserializer)
         deserializer {
           open_x_json_ser_de {
@@ -61,20 +61,20 @@ resource "aws_kinesis_firehose_delivery_stream" "silver" {
         }
       }
       # JONS->parquet 변환시 참고할 스키마 (glue-silver.tf에 설정)
-      schema_configuration{
+      schema_configuration {
         # 데이터베이스 명
-        database_name = 
+        database_name = aws_glue_catalog_database.silver.name
         # 테이블 명
-        table_name    = 
+        table_name = aws_glue_catalog_table.silver.name
         # role 리소스명
-        role_arn      = 
+        role_arn = aws_iam_role.firehose_silver.arn
         # 리전명
-        region        = var.aws_region
+        region = var.aws_region
         # 버전
-        version_id    = "LATEST"
+        version_id = "LATEST"
       }
       # 출력 SNAPPY 압축을 통한 Parquet임
-      output_foramt_configuration{
+      output_format_configuration {
         serializer {
           parquet_ser_de {
             compression = "SNAPPY"

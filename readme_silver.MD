@@ -286,5 +286,13 @@ Bronze Kinesis -> 배치 프로세싱을 통해 오염 데이터만 추출하여
 - outputs.tf
   - glue 관련 이름, 리소스등 출력
 
-
-### silver.tf (수정)
+- 인프라 반영
+  - terraform -chdir=infra plan
+  - terraform -chdir=infra apply
+  - fink 앱 가동(대시보드 or flink-start.bat)
+  - flink-status.bat => RUNNING
+  - 로그 발송
+  - 1분후 > s3://버킷/silver/..../*.parquet 확인 => 다운로드 => 구글 parquet 뷰어 => 드레그드롭
+  - Glue가서 데이데이스, 테이블등 각각 조회 > 스키마 확인
+  - flink 앱 중지(대시보드 or flink-stop.bat)
+  - flink-status.bat => READY

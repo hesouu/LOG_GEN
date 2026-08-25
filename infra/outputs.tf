@@ -94,3 +94,11 @@ output "flink_code_s3_prefix" {
 output "flink_log_group_name" {
   value = aws_cloudwatch_log_group.flink.name
 }
+
+# Glue/parquet 관련
+output "silver_glue_database_name" {
+  value = aws_glue_catalog_database.silver.name
+}
+output "silver_glue_table_name" {
+  value = aws_glue_catalog_table.silver.name
+}
