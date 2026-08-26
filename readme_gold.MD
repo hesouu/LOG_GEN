@@ -214,27 +214,165 @@ Silver Kinesis
 
 
 # 인프라 및 코드 구성
-- lambda/lambda_function.py 신규
-- infra/gold-lambda.py 신규
-- infra/glue-gold.py 신규
-- infra/outputs.tf 내용 추가
-- lambda 서비스 배포 작업 (필요한 추가파일등 고려)
+```
+/
+├─ infra/
+│  ├─ gold-lambda.tf    : lambda 사용에 관련된 모든 내용 총합 세팅(로컬, 리소스, iam-role등)
+│  ├─ glue-gold.tf      : parquet 저장에 따른 glue 설정
+│  └─ outputs-gold.tf   : 출력값(신규 세팅)
+│
+├─ lambda/                  : 신규 폴더
+│  └─ gold/                 
+│     ├─ main.py            : 처리 함수
+│     └─ gold-lambda.zip    : 람다에 배포할 압축 파일
+│
+├─ scripts/
+│  ├─ build-gold-lambda.bat : 빌드
+│  └─ build-gold-lambda.sh  : 빌드
+```
 
 # lambda
 - 서버에 대한 걱정 없이 코드 실행(함수 단위)
-    - 파이썬/노드/자바 등 언어에 대한 세팅x
-    - 최소 라이브러리만 지원 => 필요시 서브 파트 라이브러리 업로드 해야함
-- 서버리스
-- 이벤트 드라이븐 형태로 작동
-    - s3에 뭔가 업로드 되었다(소카 서비스 이용후 차량 촬영하여 업로드) -> 트리거 작동 ->
-        람다 작동 -> 사진 전처리/분석 행위 -> 결과를 SQS 전송 -> gold에 도달 -> 고객 앱으로 전달(eX. 파손 비용 10만원 부과)
-
-# 람다 코드 작성
-'''
-/
-L lambda
-|   L lambda_function.py: 현재는 간단하게 헬로월드 수준으로 구성
-```
+    - 파이썬/노드/자바등 언어에 대한 세팅 x
+    - 최소 라이브러리만 지원 => 필요시 서드 파트 라이브러리 업로드 해야함
+- `서버리스`
+- `이벤트 드라이븐 형태로 작동`
+- s3에 뭔가 업로드 되었다(소카 서비스 이용후 차량 촬영하여 업로드) -> 트리거 작동 -> 람다 작동 -> 사진 전처리/분석 행위(AI 사용) -> 결과를 SQS 전송 -> gold에 도달 -> 고객 앱으로 전달(파손 비용 10만원 부과)
 
 # 인프라 구성
--
+- gold-lambda.tf
+
+# Athena 쿼리 수행 (silver 레벨)
+```
+# 전체 테이블 조회 
+show tables;
+
+# 테이블 스키마 확인
+describe silver_logs_tbl;
+
+# 특정 시간대 전체 건수 (파티션 활용)
+select count(*) as cnt
+from silver_logs_tbl
+where year='2026' and month='08' and day='25' and hour='14'
+;
+
+
+# 중첩 스트럭처 출력
+# 이름.맴버
+select
+    domain,
+    event_type,
+    service.name,
+    request.method,
+    request.path,
+    response.status_code,
+    response.latency_ms
+from silver_logs_tbl
+where year = '2026'
+	and month = '08'
+	and day = '25'
+	and hour = '14'
+limit 10
+;
+
+# 도메인별 로그 개수 집계 쿼리 작성 (실습)
+# 단, 2026년 8월 25일 14시 기준
+# 1. domain, cnt 로 출력, cnt 기준 내림차순 정렬
+select
+    domain,
+    count(*) as cnt
+from silver_logs_tbl
+where year = '2026'
+	and month = '08'
+	and day = '25'
+	and hour = '14'
+GROUP BY domain
+ORDER BY cnt DESC
+;
+
+
+# 2. 도메인별 이벤트 타입별 발생 건수
+#    domain, event_type, cnt
+#    domain, cnt 기준 내림차순 정렬
+select
+    domain,
+    event_type,
+    count(*) as cnt
+from silver_logs_tbl
+where year = '2026'
+	and month = '08'
+	and day = '25'
+	and hour = '14'
+GROUP BY domain, event_type
+ORDER BY domain, cnt DESC
+;
+
+
+# 응답 HTTP 상태코드별 건수 집계
+# domain, event_type, status_code, cnt 출력
+# 집계대상은 domain, event_type, status_code
+# 정렬은 event_type ASC, status_code DESC
+select
+    domain,
+    event_type,
+    response.status_code,
+    count(*) as cnt
+from silver_logs_tbl
+where year = '2026'
+	and month = '08'
+	and day = '25'
+	and hour = '14'
+GROUP BY domain, event_type, response.status_code
+ORDER BY event_type ASC, response.status_code DESC
+;
+
+
+# 에러만 집계 (응답코드 >= 400)
+# event_type, event_type 별 개수(cnt) 출력
+select
+    event_type,
+    count(*) as cnt
+from silver_logs_tbl
+where year = '2026'
+	and month = '08'
+	and day = '25'
+	and hour = '14'
+	and response.status_code >= 400
+GROUP BY event_type
+ORDER BY cnt desc;
+
+# 서비스별 평균응답 시간
+# 서비스명, 응답시간 평균, 응답시간 최대값, 서비스별개수
+# KPI(핵심성과지표) 항목을 이용하여 조직/개인의 성과(목표)에 대한 달성여부 객곽적인 수치로 평가등에 활용 
+select 
+    service.name as service_name, 
+    avg( response.latency_ms ) as avg_latency_ms,
+    max( response.latency_ms ) as max_latency_ms,
+    count(*) as cnt
+from silver_logs_tbl
+where year = '2026'
+	and month = '08'
+	and day = '25'
+	and hour = '14'
+GROUP BY service.name
+ORDER BY avg_latency_ms DESC
+;
+select 
+    event_type, 
+    avg( response.latency_ms ) as avg_latency_ms,
+    max( response.latency_ms ) as max_latency_ms,
+    count(*) as cnt
+from silver_logs_tbl
+where year = '2026'
+	and month = '08'
+	and day = '25'
+	and hour = '14'
+GROUP BY event_type
+ORDER BY avg_latency_ms DESC
+;
+
+
+
+```
+
+# 람다 코드 작성
