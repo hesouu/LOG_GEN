@@ -156,7 +156,7 @@ resource "aws_lambda_event_source_mapping" "silver_to_gold" {
   # 테라폼 구성 이후 활성화
   enabled = true
   # 실패한 레코드에 대해, 성공 레코드도 섞여 있을 경우, 다시 처리 할것인가? -> 다시 처리 않함
-  function_response_types = ["ReportBatchItemFailure"]
+  function_response_types = ["ReportBatchItemFailures"]
   # 의존성
   depends_on = [aws_iam_role_policy.lambda]
 }
