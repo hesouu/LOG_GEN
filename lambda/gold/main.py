@@ -44,7 +44,7 @@ def _decode_kinesis_record(record: dict[str, Any]) -> dict[str, Any]:
     value = json.loads(payload)
 
     if not isinstance(value, dict):
-        # 형식에 문제가 발생 => 오류 반환
+        # 형식에 문제가 발생 => 오류 반환 (딕셔너리가 아니면)
         raise ValueError("Silver payload must be a JSON object.")
 
     # dict 객체 반환
